@@ -18,6 +18,7 @@ class EmployeeController extends Controller
     public function index(): Response
     {
         $employees = Employee::all();
+        //$skills = $employee->skills->toArray();
         //$employees = Employee::find('')->skills;
         //$employees->skills = Employee::with('skills')->get();
         //dd($employees);
@@ -84,11 +85,19 @@ class EmployeeController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param Employee $employee
-     * @return Response
+     * @return JsonResponse
      */
-    public function edit(Employee $employee)
+    public function edit(Employee $employee):JsonResponse
     {
-        //
+        $skills = $employee->skills->toArray();
+        if (count($skills) > 0) {
+            foreach ($skills as $skill) {
+                    $skillList[] = trim($skill['title']);
+            }
+            $employee->skill_list = implode(",", $skillList);
+        }
+
+        return response()->json($employee);
     }
 
     /**
@@ -96,11 +105,35 @@ class EmployeeController extends Controller
      *
      * @param Request $request
      * @param Employee $employee
-     * @return Response
+     * @param Skill $skillModel
+     * @return JsonResponse
      */
-    public function update(Request $request, Employee $employee)
+    public function update(Request $request, Employee $employee, Skill $skillModel): JsonResponse
     {
-        //
+        $updateEmployee = $employee->save($request->validate([
+            'full_name' => 'required|string|min:3|max:255',
+            'specialization' => 'string',
+            'experience' => 'required|integer',
+            'description' => 'string',
+            'skill_list' => 'required|string',
+        ]));
+
+        if ($updateEmployee) {
+            //delete
+            $skillModel::where('employee_id',$request->id)->delete();
+            //recreate
+            $skills = explode(",", $request->skill_list);
+            foreach ($skills as $skill) {
+                $skillModel->create([
+                    'employee_id' => $request->id,
+                    'title' => trim($skill),
+                ]);
+            }
+
+            return response()->json('ok');
+        } else {
+            return response()->json('update failed', 400);
+        }
     }
 
     /**
