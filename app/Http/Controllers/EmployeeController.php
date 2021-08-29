@@ -110,22 +110,27 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, Employee $employee, Skill $skillModel): JsonResponse
     {
-        $updateEmployee = $employee->save($request->validate([
+        $request->validate([
             'full_name' => 'required|string|min:3|max:255',
             'specialization' => 'string',
             'experience' => 'required|integer',
             'description' => 'string',
             'skill_list' => 'required|string',
-        ]));
+        ]);
 
-        if ($updateEmployee) {
+        $employee->full_name = $request->input('full_name');
+        $employee->specialization = $request->input('specialization');
+        $employee->experience = $request->input('experience');
+        $employee->description = $request->input('description');
+
+        if ($employee->save()) {
             //delete
-            $skillModel::where('employee_id',$request->id)->delete();
+            $skillModel::where('employee_id', $employee->id)->delete();
             //recreate
             $skills = explode(",", $request->skill_list);
             foreach ($skills as $skill) {
                 $skillModel->create([
-                    'employee_id' => $request->id,
+                    'employee_id' => $employee->id,
                     'title' => trim($skill),
                 ]);
             }
