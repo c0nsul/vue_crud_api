@@ -16,7 +16,7 @@ class CreateEmployeesTable extends Migration
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
             $table->string('full_name');
-            $table->string('specialization')->nullable();
+            $table->string('specialization');
             $table->integer('experience')->default(0); //years
             $table->text('description')->nullable();
             $table->timestamps();

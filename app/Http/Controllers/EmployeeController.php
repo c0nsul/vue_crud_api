@@ -17,10 +17,13 @@ class EmployeeController extends Controller
      */
     public function index(): Response
     {
-        $emploess = Employee::all();
+        $employees = Employee::all();
+        //$employees = Employee::find('')->skills;
+        //$employees->skills = Employee::with('skills')->get();
+        //dd($employees);
         return response([
                 'timestamp' => time(),
-                'data' => $emploess,
+                'data' => $employees,
             ]
         );
     }
@@ -44,12 +47,16 @@ class EmployeeController extends Controller
     {
         $newEmployee = Employee::create($request->validate([
             'full_name' => 'required|string|min:3|max:255',
-            'skills' => 'required|array',
+            'specialization' => 'string',
+            'experience' => 'required|integer',
+            'description' => 'string',
+            'skills' => 'required|string',
         ]));
 
         if ($newEmployee) {
             //create skills
-            foreach ($request->skills as $skill) {
+            $skills = explode(",", $request->skills);
+            foreach ($skills as $skill) {
                 $skillModel->create([
                     'employee_id' => $newEmployee->id,
                     'title' => $skill,
